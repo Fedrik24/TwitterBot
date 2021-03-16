@@ -2,6 +2,8 @@ import tweepy
 import logging
 from TwitBot import Api_FedrikBot
 import time
+import datetime as dt
+from apscheduler.schedulers.blocking import BlockingScheduler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -22,7 +24,6 @@ class FavRetweetListener(tweepy.StreamListener):
             try:
                 tweet.favorite()
             except tweepy.error.TweepError as e:
-                time.sleep(60*15)
                 logger.error("Error on fav", exc_info=False)
         if not tweet.retweeted:
             
@@ -42,16 +43,18 @@ def follow_followers(api):
             follower.follow()
 
 def ReTweet(keywords):
-    api = Api_FedrikBot()
-    tweets_listener = FavRetweetListener(api)
-    stream = tweepy.Stream(api.auth, tweets_listener)
-    stream.filter(track=keywords, languages=["en"])
     while True:
+        api = Api_FedrikBot()
+        tweets_listener = FavRetweetListener(api)
+        stream = tweepy.Stream(api.auth, tweets_listener)
+        stream.filter(track=keywords, languages=["en"])
         follow_followers(api)
         logger.info("Waiting...")
         time.sleep(60)
-
+        
 if __name__ == "__main__":
+   schedul = BlockingScheduler()
+   schedul.add_job(
    ReTweet(["#OLLIcin", 
           "#Kureiji_Ollie",
           "#Anya_Melfissa",
@@ -97,4 +100,5 @@ if __name__ == "__main__":
           "#ドドドライブ",
           "#しょこらーと",
           "#らみらいぶ ",
-          "#ポルカおるか"])
+          "#ポルカおるか"]),'interval',hour=1)
+   schedul.start()
